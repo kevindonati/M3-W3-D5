@@ -1,4 +1,3 @@
-import { useState } from "react"
 import {
   Container,
   Navbar,
@@ -10,9 +9,47 @@ import {
 } from "react-bootstrap"
 
 import logoApple from "../assets/logos/apple.svg"
+import { useDispatch, useSelector } from "react-redux"
+
+import { type RootState } from "../redux/store"
+import { useEffect, useRef } from "react"
+import type { AppDispatch } from "../redux/store"
+import { pause, play, setVolume } from "../redux/actions"
 
 const Header = () => {
-  const [volume, setVolume] = useState<number>(0)
+  const { currentSong, isPlaying, volume } = useSelector(
+    (state: RootState) => state.player,
+  )
+  const dispatch = useDispatch<AppDispatch>()
+
+  const inputAudio = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    if (!currentSong?.preview) return
+
+    if (inputAudio.current) {
+      inputAudio.current.pause()
+    }
+
+    inputAudio.current = new Audio(currentSong.preview)
+    inputAudio.current.volume = volume / 100
+  }, [currentSong])
+
+  useEffect(() => {
+    if (!inputAudio.current) return
+
+    if (isPlaying) {
+      inputAudio.current.play()
+    } else {
+      inputAudio.current.pause()
+    }
+  }, [isPlaying])
+
+  useEffect(() => {
+    if (inputAudio.current) {
+      inputAudio.current.volume = volume / 100
+    }
+  }, [volume])
 
   return (
     <Navbar bg="dark" data-bs-theme="dark">
@@ -22,7 +59,21 @@ const Header = () => {
             <Nav className="d-none d-lg-flex">
               <i className="bi bi-shuffle mx-2 text-secondary fs-6 align-self-center"></i>
               <i className="bi bi-skip-backward-fill mx-2 text-secondary fs-6 align-self-center"></i>
-              <i className="bi bi-play-fill mx-2 text-secondary fs-2 py-0 align-self-center"></i>
+              {isPlaying ? (
+                <i
+                  className="bi bi-pause-fill mx-2 text-secondary fs-2 py-0 align-self-center"
+                  onClick={() => {
+                    dispatch(pause())
+                  }}
+                ></i>
+              ) : (
+                <i
+                  className="bi bi-play-fill mx-2 text-secondary fs-2 py-0 align-self-center"
+                  onClick={() => {
+                    dispatch(play())
+                  }}
+                ></i>
+              )}
               <i className="bi bi-fast-forward-fill mx-2 text-secondary fs-6 align-self-center"></i>
               <i className="bi bi-repeat mx-2 text-secondary fs-6 align-self-center"></i>
             </Nav>
@@ -47,11 +98,18 @@ const Header = () => {
               <audio></audio>
               <input
                 type="range"
-                className="w-25"
+                className="w-75"
                 value={volume}
                 max={100}
-                onChange={(e) => setVolume(Number(e.target.value))}
-                id="progress-bar"
+                onChange={(e) => {
+                  const val = Number(e.target.value)
+
+                  dispatch(setVolume(val))
+
+                  if (inputAudio.current) {
+                    inputAudio.current.volume = val / 100
+                  }
+                }}
               />
             </Nav>
             <Nav>

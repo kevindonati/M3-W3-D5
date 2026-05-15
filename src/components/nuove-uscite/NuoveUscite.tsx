@@ -2,7 +2,7 @@ import { Col, Row, Image } from "react-bootstrap"
 
 // import { type Schema } from "../../interfaces/interfaces"
 import { useDispatch, useSelector } from "react-redux"
-import { useEffect, useRef } from "react"
+import { useEffect } from "react"
 import {
   getSongAction,
   pause,
@@ -20,39 +20,6 @@ const NuoveUscite = () => {
   const { currentSong, isPlaying, volume } = useSelector(
     (state: RootState) => state.player,
   )
-
-  const inputAudio = useRef<HTMLAudioElement | null>(null)
-
-  useEffect(() => {
-    if (!currentSong?.preview) return
-
-    if (inputAudio.current) {
-      inputAudio.current.pause()
-    }
-
-    inputAudio.current = new Audio(currentSong.preview)
-    inputAudio.current.volume = volume / 100
-
-    if (isPlaying) {
-      inputAudio.current.play()
-    }
-  }, [currentSong])
-
-  useEffect(() => {
-    if (!inputAudio.current) return
-
-    if (isPlaying) {
-      inputAudio.current.play()
-    } else {
-      inputAudio.current.pause()
-    }
-  }, [isPlaying])
-
-  useEffect(() => {
-    if (inputAudio.current) {
-      inputAudio.current.volume = volume / 100
-    }
-  }, [volume])
 
   useEffect(() => {
     dispatch(getSongAction())
@@ -158,10 +125,6 @@ const NuoveUscite = () => {
                 const val = Number(e.target.value)
 
                 dispatch(setVolume(val))
-
-                if (inputAudio.current) {
-                  inputAudio.current.volume = val / 100
-                }
               }}
             />
           </div>
